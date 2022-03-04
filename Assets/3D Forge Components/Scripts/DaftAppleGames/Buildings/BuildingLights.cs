@@ -66,7 +66,7 @@ namespace DaftAppleGames.Buildings
                 _light.range = range;
                 _light.intensity = intensity;
 #if HDPipeline
-                HDAdditionalLightData lightData = singleLight.gameObject.GetComponentInChildren<HDAdditionalLightData>();
+                HDAdditionalLightData lightData = _light.gameObject.GetComponentInChildren<HDAdditionalLightData>();
                 if (lightData)
                 {
                     lightData.shapeRadius = 3.0f;
