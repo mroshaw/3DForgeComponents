@@ -1738,8 +1738,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d319333b61dbec64583241a5bfcc75da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  openDoorClip: {fileID: 8300000, guid: 2acd9b9f3c5747644a2fb0622a896f6a, type: 3}
-  closeDoorClip: {fileID: 8300000, guid: 80f85f7c9156d914890d35c6b2be956f, type: 3}
+  openDoorClip: {fileID: 8300000, guid: 41332354469bbdd479490791cd62ca0a, type: 3}
+  closeDoorClip: {fileID: 8300000, guid: 52f9855d7d7aca949911c62ac7eda612, type: 3}
   colliderHeight: 1
   colliderDepth: 1
   showPrompt: 1
