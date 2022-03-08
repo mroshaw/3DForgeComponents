@@ -134,6 +134,22 @@ PrefabInstance:
       propertyPath: m_Name
       value: ThunderHammerForge
       objectReference: {fileID: 0}
+    - target: {fileID: 4043465485013922, guid: 7d92e668b4a12324885eee345ae589cf, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4346990186144292, guid: 7d92e668b4a12324885eee345ae589cf, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4525267360927452, guid: 7d92e668b4a12324885eee345ae589cf, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4709186859248304, guid: 7d92e668b4a12324885eee345ae589cf, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4717235523525956, guid: 7d92e668b4a12324885eee345ae589cf, type: 3}
       propertyPath: m_RootOrder
       value: 1
@@ -176,6 +192,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4717235523525956, guid: 7d92e668b4a12324885eee345ae589cf, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4869042752325612, guid: 7d92e668b4a12324885eee345ae589cf, type: 3}
+      propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
