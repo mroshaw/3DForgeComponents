@@ -2,6 +2,7 @@
 using Invector.vCharacterController.vActions;
 #endif
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace DaftAppleGames.Buildings
 {
@@ -26,6 +27,20 @@ namespace DaftAppleGames.Buildings
         public float promptHeight;
         public float promptDepthOffset;
 
+        [Header("Behaviour")] 
+        [Tooltip("Check this if the door animation is moving in the wrong direction")]
+        public bool toggleAnimationDirection;
+        [Tooltip("Looking from outside in, in which corner is the pivot?")]
+        public DoorPivot doorPivot = DoorPivot.Right;
+        [Tooltip("Check this if you'd like the component to guess the pivot and animation direction, based on the name of the door")]
+        public bool guessDoorBehaviour = false;
+        
+        [Header("Events")]
+        [Tooltip("This event is triggered when the player first interacts with a door.")]
+        public UnityEvent beginDoorInteractEvent;
+        [Tooltip("This event is triggered at the end of the door animation.")]
+        public UnityEvent endDoorInteractEvent;
+
         // Door animator properties
         private Animator _referenceAnimator;
         private Animator _doorAnimator;
@@ -38,14 +53,6 @@ namespace DaftAppleGames.Buildings
         private float _doorHeight;
         private float _doorWidth;
         private float _doorDepth;
-        
-        [Header("Behaviour")] 
-        [Tooltip("Check this if the door animation is moving in the wrong direction")]
-        public bool toggleAnimationDirection;
-        [Tooltip("Looking from outside in, in which corner is the pivot?")]
-        public DoorPivot doorPivot = DoorPivot.Right;
-        [Tooltip("Check this if you'd like the component to guess the pivot and animation direction, based on the name of the door")]
-        public bool guessDoorBehaviour = false;
         
         // Start is called before the first frame update
         void Start()
@@ -257,17 +264,21 @@ namespace DaftAppleGames.Buildings
         /// <summary>
         /// Call the open inwards animation
         /// </summary>
-        public void DoorOpenInwards()
+        private void DoorOpenInwards()
         {
+            beginDoorInteractEvent.Invoke();
             _doorAnimator.Play("door_open_in");
+            endDoorInteractEvent.Invoke();
         }
 
         /// <summary>
         /// Call the open outwards animation
         /// </summary>
-        public void DoorOpenOutwards()
+        private void DoorOpenOutwards()
         {
+            beginDoorInteractEvent.Invoke();
             _doorAnimator.Play("door_open_out");
+            endDoorInteractEvent.Invoke();
         }
 
         /// <summary>
