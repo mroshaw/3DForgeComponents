@@ -1,6 +1,6 @@
 using System;
-using System.Security.Cryptography;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace DaftAppleGames.Buildings
 {
@@ -21,6 +21,11 @@ namespace DaftAppleGames.Buildings
         [Tooltip("Use this to toggle lights on and off for testing purposes")]
         public KeyCode debugToggleLights = KeyCode.L;
 
+        [Header("Events")]
+        public UnityEvent lightsOnEvent;
+        public UnityEvent lightsOffEvent;
+        public UnityEvent lightsToggleEvent;
+        
         private BuildingLights[] _allBuildingLights;
         
         // Useful debug
@@ -54,7 +59,7 @@ namespace DaftAppleGames.Buildings
             {
                 foreach (BuildingLights buildingLight in _allBuildingLights)
                 {
-                    buildingLight.ReConfigureLightProperties(radius, range, intensity);
+                    buildingLight.ReConfigureLightProperties(range, intensity, radius);
                 }
             }
         }
@@ -102,6 +107,7 @@ namespace DaftAppleGames.Buildings
         private void ToggleLights()
         {
             SetAllBuildingLightsState(!_isLightsOn);
+            lightsToggleEvent.Invoke();
         }
 
         /// <summary>
@@ -117,6 +123,15 @@ namespace DaftAppleGames.Buildings
             }
 
             _isLightsOn = state;
+
+            if (_isLightsOn)
+            {
+                lightsOnEvent.Invoke();
+            }
+            else
+            {
+                lightsOffEvent.Invoke();
+            }
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 #if HDPipeline
 using UnityEngine.Rendering.HighDefinition;
 #endif
@@ -13,11 +14,13 @@ namespace DaftAppleGames.Buildings
         /// </summary>
         private class LightConfig
         {
+            public readonly string lightName;
+            public readonly string lightParentName;
             private readonly GameObject _lightGameObject;
-            private GameObject _flameGameObject;
+            private readonly GameObject _flameGameObject;
             private readonly Light _light;
             private int _index;
-            private bool _isCandle;
+            private readonly bool _isCandleOrTorch;
 
             /// <summary>
             /// Turn on light
@@ -43,9 +46,13 @@ namespace DaftAppleGames.Buildings
                 }
             }
 
-            public bool IsCandle()
+            /// <summary>
+            /// Returns true if light is a candle or torch
+            /// </summary>
+            /// <returns></returns>
+            public bool IsCandleOrTorch()
             {
-                return _isCandle;
+                return _isCandleOrTorch;
             }
             
             /// <summary>
@@ -61,68 +68,88 @@ namespace DaftAppleGames.Buildings
                 }
             }
 
+            /// <summary>
+            /// Configure the Light Source
+            /// </summary>
+            /// <param name="range"></param>
+            /// <param name="intensity"></param>
+            /// <param name="radius"></param>
             public void ConfigureLightSource(float range, float intensity, float radius)
             {
                 _light.range = range;
                 _light.intensity = intensity;
 #if HDPipeline
-                HDAdditionalLightData lightData = _light.gameObject.GetComponentInChildren<HDAdditionalLightData>();
+                HDAdditionalLightData lightData = _light.gameObject.GetComponent<HDAdditionalLightData>();
                 if (lightData)
                 {
-                    lightData.shapeRadius = 3.0f;
+                    lightData.shapeRadius = radius;
                 }
 #else                
 #endif
             }
             
+
             /// <summary>
             /// Constructor
             /// </summary>
             /// <param name="index"></param>
+            /// <param name="lightName"></param>
+            /// <param name="lightParentName"></param>
             /// <param name="lightGameObject"></param>
             /// <param name="light"></param>
             /// <param name="flameGameObject"></param>
-            /// <param name="isCandle"></param>
-            public LightConfig(int index, GameObject lightGameObject, Light light, GameObject flameGameObject, bool isCandle)
+            /// <param name="isCandleOrTorch"></param>
+            public LightConfig(int index, string lightName, string lightParentName, GameObject lightGameObject, Light light, GameObject flameGameObject, bool isCandleOrTorch)
             {
+                this.lightName = lightName;
+                this.lightParentName = lightParentName;
                 _index = index;
                 _lightGameObject = lightGameObject;
                 _light = light;
-                _isCandle = isCandle;
+                _flameGameObject = flameGameObject;
+                _isCandleOrTorch = isCandleOrTorch;
             }
             
             /// <summary>
             /// Simplified constructor
             /// </summary>
             /// <param name="index"></param>
+            /// <param name="lightName"></param>
+            /// <param name="lightParentName"></param>
             /// <param name="lightGameObject"></param>
             /// <param name="light"></param>
-            /// <param name="isCandle"></param>
-            public LightConfig(int index, GameObject lightGameObject, Light light, bool isCandle)
+            /// <param name="isCandleOrTorch"></param>
+            public LightConfig(int index, string lightName, string lightParentName, GameObject lightGameObject, Light light, bool isCandleOrTorch)
             {
+                this.lightName = lightName;
+                this.lightParentName = lightParentName;
                 _index = index;
                 _lightGameObject = lightGameObject;
                 _light = light;
-                _isCandle = isCandle;
+                _isCandleOrTorch = isCandleOrTorch;
             }
-            
         }
 
         [Header("Building light behaviour")]
         [Tooltip("Set this for this buildings light config to override the global configuration.")]
         public bool overrideGlobal;
-        [Tooltip("Set this to true to only impact candle light sources.")]
-        public bool candlesOnly;
+        [Tooltip("Set this to true to only impact candle and torch light sources.")]
+        public bool candleAndTorchOnly;
         [Tooltip("Set this if you want only child Light components to be effected. Leaving this blank will assume all lights within the parent Game Object to be effected.")]
         public GameObject parentBuildingGameObject;
         [Header("Light configuration")]
         public float radius = 3;
         public float intensity = 600;
         public float range = 20;
-
+        [Header("Events")]
+        public UnityEvent lightsOnEvent;
+        public UnityEvent lightsOffEvent;
+        public UnityEvent lightsToggleEvent;
         
+        // Useful for debugging
         private bool _isLightsOn;
         private List<LightConfig> _allLights;
+        private int _lightCount;
 
         /// <summary>
         /// Configure all lights in the attached building object
@@ -166,18 +193,26 @@ namespace DaftAppleGames.Buildings
         {
             foreach (LightConfig singleLight in _allLights)
             {
-                if (!candlesOnly || (candlesOnly && singleLight.IsCandle()))
+                if (!candleAndTorchOnly || (candleAndTorchOnly && singleLight.IsCandleOrTorch()))
                 {
                     singleLight.SetLightState(state);
                 }
             }
             _isLightsOn = state;
+            if (_isLightsOn)
+            {
+                lightsOnEvent.Invoke();
+            }
+            else
+            {
+                lightsOffEvent.Invoke();
+            }
         }
 
         /// <summary>
         /// Configure all lights in the building with given properties
         /// </summary>
-        public void ConfigureBuildingLights()
+        private void ConfigureBuildingLights()
         {
             // Get all "Light" components from parent
             Light[] allLightsInBuilding;
@@ -196,44 +231,56 @@ namespace DaftAppleGames.Buildings
             // Iterate through lights and add to global building list
             foreach (Light singleLight in allLightsInBuilding)
             {
-                // Check if this is a candle
-                bool isCandle = singleLight.gameObject.name.ToLower().Contains("candle");
+                // Check if this is a candle or torch
+                string lightName = singleLight.gameObject.name;
+                string parentName = singleLight.gameObject.transform.parent.gameObject.name.ToLower();
+                bool isCandleOrTorch = parentName.Contains("candle") || parentName.Contains("torch");
                 
                 // Look for the candle "Flame" particle GameObject
                 LightConfig newLightConfig;
-                if (isCandle)
+                if (isCandleOrTorch)
                 {
                     ParticleSystem flameParticle = singleLight.gameObject.transform.parent.gameObject
                         .GetComponentInChildren<ParticleSystem>();
                     if (flameParticle)
                     {
-                        newLightConfig = new LightConfig(currentIndex, singleLight.transform.parent.gameObject,
-                            singleLight,
-                            flameParticle.gameObject, isCandle);
+                        newLightConfig = new LightConfig(currentIndex, lightName, parentName, singleLight.transform.parent.gameObject,
+                            singleLight, flameParticle.gameObject, true);
                     }
                     else
                     {
-                        newLightConfig = new LightConfig(currentIndex, singleLight.transform.parent.gameObject,
-                            singleLight, isCandle);
+                        newLightConfig = new LightConfig(currentIndex, lightName, parentName, singleLight.transform.parent.gameObject,
+                            singleLight, true);
                     }
                 }
                 else
                 {
-                    newLightConfig = new LightConfig(currentIndex, singleLight.transform.parent.gameObject,
-                        singleLight, isCandle);
+                    newLightConfig = new LightConfig(currentIndex, lightName, parentName, singleLight.transform.parent.gameObject,
+                        singleLight, false);
                 }
 
                 // Reconfigure light settings if overriding global controller settings
                 if (overrideGlobal)
                 {
                     newLightConfig.ConfigureLightSource(range, intensity, radius);
+                    Debug.Log($"Local light source configured: {newLightConfig.lightParentName} / {newLightConfig.lightName}");
                 }
 
                 // Add to building list
                 _allLights.Add(newLightConfig);
                 currentIndex++;
             }
-            Debug.Log($"Configured: {_allLights.Count} lights");
+
+            _lightCount = _allLights.Count;
+            if (parentBuildingGameObject)
+            {
+                Debug.Log($"Configured: {_lightCount} lights on {parentBuildingGameObject.name}");
+            }
+            else
+            {
+                Debug.Log($"Configured: {_lightCount} lights.");
+
+            }
         }
 
         /// <summary>
@@ -245,9 +292,10 @@ namespace DaftAppleGames.Buildings
             {
                 foreach (LightConfig singleLight in _allLights)
                 {
-                    if (!candlesOnly || (candlesOnly && singleLight.IsCandle()))
+                    if (!candleAndTorchOnly || (candleAndTorchOnly && singleLight.IsCandleOrTorch()))
                     {
                         singleLight.ConfigureLightSource(newRange, newIntensity, newRadius);
+                        Debug.Log($"Global light source configured: {singleLight.lightParentName} / {singleLight.lightName}");
                     }
                 }
             }
